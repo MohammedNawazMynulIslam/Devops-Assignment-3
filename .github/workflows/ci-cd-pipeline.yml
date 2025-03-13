@@ -1,0 +1,59 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '21.6.1'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+        continue-on-error: true
+        id: test
+
+      - name: Upload test results
+        if: always()
+        run: |
+          mkdir -p test-results
+          echo "Test results" > test-results/results.txt
+          echo "Test Status: ${{ job.status }}" >> test-results/results.txt
+          echo "Test Output: ${{ steps.test.outcome }}" >> test-results/results.txt
+          echo "Test Results:" >> test-results/results.txt
+          cat test-results/results.txt
+        id: upload
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-results
+          path: test-results/results.txt
+
+  deploy:
+    runs-on: self-hosted
+    needs: test
+    steps:
+      - name: Download test results
+        uses: actions/download-artifact@v2
+        with:
+          name: test-results
+
+      - name: Display test results
+        run: cat test-results/results.txt
+
+      - name: Deploy application
+        run: |
+          echo "Deploying application"
