@@ -1,4 +1,4 @@
 Test results
 Test Status: success
-Test Output: failure
+Test Output: success
 Test Results:
